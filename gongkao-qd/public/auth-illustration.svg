@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 360" width="400" height="360">
+  <defs>
+    <radialGradient id="bgGrad" cx="0.5" cy="0.5" r="0.7">
+      <stop offset="0" stop-color="#d1fae5"></stop>
+      <stop offset="1" stop-color="#ecfdf5"></stop>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="360" fill="url(#bgGrad)"></rect>
+
+  
+  <circle cx="60" cy="60" r="4" fill="#34d399" opacity="0.5">
+    
+  </circle>
+  <circle cx="340" cy="80" r="6" fill="#f59e0b" opacity="0.4">
+    
+  </circle>
+  <circle cx="360" cy="280" r="5" fill="#8b5cf6" opacity="0.5">
+    
+  </circle>
+  <circle cx="40" cy="300" r="4" fill="#10b981" opacity="0.5"></circle>
+  <g stroke-linecap="round">
+    <g transform="translate(310 40)">
+      <path d="M 0 6 l 12 0 M 6 0 l 0 12" stroke="#059669" stroke-width="2.5" fill="none">
+        
+      </path>
+    </g>
+    <g transform="translate(80 320)">
+      <path d="M 0 5 l 10 0 M 5 0 l 0 10" stroke="#d97706" stroke-width="2.5" fill="none">
+        
+      </path>
+    </g>
+  </g>
+
+  
+  <g>
+    
+    <g transform="translate(70 130) rotate(-8)">
+      <rect width="40" height="50" rx="4" fill="#fff" stroke="#d1d5db"></rect>
+      <line x1="6" y1="14" x2="34" y2="14" stroke="#10b981" stroke-width="2"></line>
+      <line x1="6" y1="24" x2="30" y2="24" stroke="#d1d5db" stroke-width="1.5"></line>
+      <line x1="6" y1="32" x2="34" y2="32" stroke="#d1d5db" stroke-width="1.5"></line>
+      <line x1="6" y1="40" x2="26" y2="40" stroke="#d1d5db" stroke-width="1.5"></line>
+    </g>
+  </g>
+
+  
+  <g>
+    
+    <g transform="translate(280 60) rotate(25)">
+      <rect width="60" height="10" rx="2" fill="#f59e0b"></rect>
+      <path d="M 60 0 l 10 5 l -10 5 z" fill="#1f2937"></path>
+      <rect x="0" y="0" width="10" height="10" fill="#ef4444"></rect>
+    </g>
+  </g>
+
+  
+  <g>
+    
+    <path d="M 40 280 A 80 80 0 0 1 200 280 L 40 280 Z" fill="#fb923c"></path>
+    <circle cx="95" cy="245" r="9" fill="#fff"></circle>
+    <circle cx="145" cy="245" r="9" fill="#fff"></circle>
+    
+    <g>
+      
+      <circle cx="97" cy="247" r="4" fill="#1f2937"></circle>
+      <circle cx="147" cy="247" r="4" fill="#1f2937"></circle>
+    </g>
+    
+    <rect x="86" y="241" width="18" height="0" fill="#fb923c">
+      
+    </rect>
+    <rect x="136" y="241" width="18" height="0" fill="#fb923c">
+      
+    </rect>
+  </g>
+
+  
+  <g style="transform-origin: 175px 280px; transform-box: fill-box;">
+    
+    <rect x="140" y="100" width="70" height="180" rx="35" fill="#7c3aed"></rect>
+    <circle cx="162" cy="145" r="7" fill="#fff"></circle>
+    <circle cx="188" cy="145" r="7" fill="#fff"></circle>
+    <circle cx="164" cy="147" r="3" fill="#1f2937"></circle>
+    <circle cx="190" cy="147" r="3" fill="#1f2937"></circle>
+    <path d="M 162 170 q 13 8 26 0" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"></path>
+    
+    <rect x="155" y="142" width="14" height="0" fill="#7c3aed">
+      
+    </rect>
+    <rect x="181" y="142" width="14" height="0" fill="#7c3aed">
+      
+    </rect>
+  </g>
+
+  
+  <g>
+    
+    <rect x="210" y="120" width="56" height="160" rx="28" fill="#1f2937"></rect>
+    <circle cx="225" cy="158" r="6" fill="#fff"></circle>
+    <circle cx="251" cy="158" r="6" fill="#fff"></circle>
+    <circle cx="227" cy="160" r="2.5" fill="#1f2937"></circle>
+    <circle cx="253" cy="160" r="2.5" fill="#1f2937"></circle>
+  </g>
+
+  
+  <g>
+    
+    <g>
+      
+      <ellipse cx="305" cy="260" rx="55" ry="40" fill="#fbbf24"></ellipse>
+      <path d="M 355 250 l 20 -10 l -15 22 z" fill="#fbbf24"></path>
+      <path d="M 250 258 l -16 6 l 16 6 z" fill="#f59e0b"></path>
+      <circle cx="275" cy="248" r="8" fill="#fff"></circle>
+      <circle cx="277" cy="250" r="3.5" fill="#1f2937"></circle>
+      
+      <rect x="269" y="244" width="14" height="0" fill="#fbbf24">
+        
+      </rect>
+    </g>
+  </g>
+
+  
+  <g style="transform-origin: 64px 280px; transform-box: fill-box;">
+    
+    <path d="M 60 280 q -4 -18 4 -30 q 8 12 4 30 z" fill="#10b981"></path>
+  </g>
+</svg>

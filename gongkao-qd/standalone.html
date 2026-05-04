@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>公考小智 · Vue 预览</title>
+<link rel="stylesheet" href="src/assets/colors_and_type.css">
+<link rel="stylesheet" href="src/assets/global.css">
+<style>
+  /* fallback since global.css loads CSS vars from colors_and_type.css */
+  html, body, #app { margin: 0; padding: 0; background: var(--gk-gray-100); font-family: var(--gk-font-sans); color: var(--gk-fg-body); -webkit-font-smoothing: antialiased; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://unpkg.com/vue@3.4.27/dist/vue.global.prod.js"></script>
+<script>
+const { createApp, ref, reactive, computed, onBeforeUnmount } = Vue;
+
+// ---------- Primitive components (global options) ----------
+const Card = {
+  props: { padding: { type: [Number, String], default: 20 } },
+  template: `<div :style="{ background:'#fff', border:'1px solid var(--gk-gray-200)', borderRadius:'12px', padding: (typeof padding === 'number' ? padding+'px' : padding) }"><slot/></div>`
+};
+
+const SectionHeader = {
+  props: { emoji: String, title: { type: String, required: true } },
+  template: `<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+    <div style="font-size:18px;font-weight:600;color:var(--gk-gray-900);display:flex;align-items:center;gap:8px;flex:1;">
+      <span v-if="emoji" style="font-size:20px;">{{emoji}}</span>{{title}}
+    </div>
+    <slot name="right"/>
+  </div>`
+};
+
+const StatusPill = {
+  template: `<span style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:9999px;font-size:12px;font-weight:500;background:var(--gk-green-50);color:var(--gk-green-700);border:1px solid var(--gk-green-200);">
+    <span style="width:6px;height:6px;border-radius:50%;background:var(--gk-green-500);"></span><slot/>
+  </span>`
+};
+
+const Btn = {
+  props: { variant: { type: String, default: 'primary' }, icon: String },
+  computed: {
+    style() {
+      const map = {
+        primary:  { background: 'var(--gk-blue-600)',   color: '#fff' },
+        practice: { background: 'var(--gk-violet-600)', color: '#fff' },
+        success:  { background: 'var(--gk-green-500)',  color: '#fff' },
+        ai:       { background: 'var(--gk-indigo-600)', color: '#fff' },
+        ghost:    { background: 'transparent', border: '1px solid var(--gk-gray-300)', color: 'var(--gk-gray-700)' },
+        danger:   { background: 'transparent', border: '1px solid #fca5a5', color: 'var(--gk-red-600)' }
+      };
+      return Object.assign({
+        border: 0, fontFamily: 'inherit', fontWeight: 500, fontSize: '14px',
+        padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', transition: 'all 180ms',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+      }, map[this.variant]);
+    }
+  },
+  template: `<button :style="style"><span v-if="icon">{{icon}}</span><slot/></button>`
+};
+
+const IconBtn = {
+  props: { title: String },
+  template: `<button :title="title" style="width:36px;height:36px;border:1px solid var(--gk-gray-200);background:#fff;border-radius:8px;color:var(--gk-gray-500);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:16px;"><slot/></button>`
+};
+
+const Chip = {
+  props: { variant: String, active: Boolean },
+  computed: {
+    style() {
+      const s = { display:'inline-flex', alignItems:'center', gap:'6px', padding:'6px 14px', borderRadius:'9999px', fontSize:'13px', fontWeight:500, border:'1px solid var(--gk-gray-200)', background:'#fff', color:'var(--gk-gray-700)', cursor:'pointer', transition:'all 120ms', fontFamily:'inherit' };
+      if (this.variant === 'danger') Object.assign(s, { borderColor:'#fca5a5', color:'var(--gk-red-600)' });
+      if (this.variant === 'success') Object.assign(s, { background:'var(--gk-green-50)', borderColor:'var(--gk-green-200)', color:'var(--gk-green-700)' });
+      if (this.active) Object.assign(s, { background:'var(--gk-blue-50)', borderColor:'var(--gk-blue-500)', color:'var(--gk-blue-700)' });
+      return s;
+    }
+  },
+  template: `<button :style="style"><slot/></button>`
+};
+
+const Avatar = {
+  props: { kind: { type: String, default: 'ai' }, size: { type: Number, default: 34 } },
+  computed: {
+    cfg() { return { ai: { bg:'var(--gk-indigo-600)', label:'智' }, me: { bg:'var(--gk-green-500)', label:'你' } }[this.kind]; },
+    style() { return { width:this.size+'px', height:this.size+'px', borderRadius:'50%', background:this.cfg.bg, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:(this.size*0.4)+'px', fontWeight:600, flexShrink:0 }; }
+  },
+  template: `<div :style="style">{{cfg.label}}</div>`
+};
+
+const Logomark = {
+  props: { size: { type: Number, default: 32 }, showText: { type: Boolean, default: true } },
+  template: `<div style="display:flex;align-items:center;gap:10px;">
+    <img src="public/logo-mark.svg" :width="size" :height="size" :style="{ borderRadius:(size*0.22)+'px', display:'block' }" alt="公考小智"/>
+    <div v-if="showText" :style="{ fontSize:(size*0.55)+'px', fontWeight:700, color:'var(--gk-gray-900)' }">公考小智</div>
+  </div>`
+};
+
+const GkInput = {
+  props: { modelValue: [String, Number], label: String, placeholder: String },
+  emits: ['update:modelValue', 'keydown'],
+  template: `<div v-if="label" style="display:flex;flex-direction:column;gap:6px;">
+    <div style="font-size:12px;color:var(--gk-gray-600);font-weight:500;">{{label}}</div>
+    <input :value="modelValue" :placeholder="placeholder"
+      @input="$emit('update:modelValue', $event.target.value)"
+      @keydown="$emit('keydown', $event)"
+      @focus="e => { e.target.style.borderColor='var(--gk-green-500)'; e.target.style.boxShadow='0 0 0 3px rgba(16,185,129,0.2)' }"
+      @blur="e => { e.target.style.borderColor='var(--gk-gray-200)'; e.target.style.boxShadow='none' }"
+      style="font-family:inherit;font-size:14px;padding:9px 12px;border:1px solid var(--gk-gray-200);border-radius:8px;background:#fff;color:#111827;width:100%;outline:none;"/>
+  </div>
+  <input v-else :value="modelValue" :placeholder="placeholder"
+    @input="$emit('update:modelValue', $event.target.value)"
+    @keydown="$emit('keydown', $event)"
+    @focus="e => { e.target.style.borderColor='var(--gk-green-500)'; e.target.style.boxShadow='0 0 0 3px rgba(16,185,129,0.2)' }"
+    @blur="e => { e.target.style.borderColor='var(--gk-gray-200)'; e.target.style.boxShadow='none' }"
+    style="font-family:inherit;font-size:14px;padding:9px 12px;border:1px solid var(--gk-gray-200);border-radius:8px;background:#fff;color:#111827;width:100%;outline:none;"/>`
+};
+
+const GkSelect = {
+  props: { modelValue: [String, Number], label: String, options: { type: Array, default: () => [] } },
+  emits: ['update:modelValue'],
+  computed: {
+    sStyle() {
+      const caret = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>\")";
+      return { fontFamily:'inherit', fontSize:'14px', padding:'9px 32px 9px 12px', border:'1px solid var(--gk-gray-200)', borderRadius:'8px', background:`#fff ${caret} no-repeat right 10px center`, color:'#111827', width:'100%', outline:'none', appearance:'none', cursor:'pointer' };
+    }
+  },
+  template: `<div v-if="label" style="display:flex;flex-direction:column;gap:6px;">
+    <div style="font-size:12px;color:var(--gk-gray-600);font-weight:500;">{{label}}</div>
+    <select :value="modelValue" @change="$emit('update:modelValue', $event.target.value)" :style="sStyle">
+      <option v-for="o in options" :key="o" :value="o">{{o}}</option>
+    </select>
+  </div>
+  <select v-else :value="modelValue" @change="$emit('update:modelValue', $event.target.value)" :style="sStyle">
+    <option v-for="o in options" :key="o" :value="o">{{o}}</option>
+  </select>`
+};
+
+// ---------- Panels ----------
+const TopNav = {
+  props: { active: String },
+  emits: ['change', 'login'],
+  components: { Logomark },
+  data() {
+    return {
+      items: [
+        { k: 'chat', label: 'AI 对话', emoji: '📚' },
+        { k: 'practice', label: '随机练习', emoji: '🎲' },
+        { k: 'download', label: '真题下载', emoji: '📦' },
+        { k: 'mistakes', label: '错题本', emoji: '📒' },
+        { k: 'plan', label: '学习计划', emoji: '📅' }
+      ]
+    };
+  },
+  methods: {
+    btnStyle(isA) { return { padding:'8px 14px', borderRadius:'8px', border:0, background: isA ? 'var(--gk-green-50)' : 'transparent', color: isA ? 'var(--gk-green-700)' : 'var(--gk-gray-600)', fontSize:'14px', fontWeight: isA ? 600 : 500, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:'6px' }; }
+  },
+  template: `<div style="background:#fff;border-bottom:1px solid var(--gk-gray-200);padding:12px 32px;display:flex;align-items:center;gap:32px;">
+    <logomark :size="32"/>
+    <div style="display:flex;gap:4px;flex:1;">
+      <button v-for="it in items" :key="it.k" @click="$emit('change', it.k)" :style="btnStyle(active === it.k)">
+        <span>{{it.emoji}}</span>{{it.label}}
+      </button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:12px;color:var(--gk-gray-500);">在线 · 2579 份真题</span>
+      <button @click="$emit('login')" style="border:1px solid var(--gk-green-500);background:var(--gk-green-50);color:var(--gk-green-700);padding:6px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">登录 / 注册</button>
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--gk-green-500);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;">你</div>
+    </div>
+  </div>`
+};
+
+const ChatPanel = {
+  components: { Card, SectionHeader, StatusPill, Chip, Avatar, GkInput, Btn, IconBtn },
+  data() {
+    return {
+      messages: [
+        { role: 'me', text: '我要出20道广东行测题' },
+        { role: 'ai', text: '好的! 确认一下：\n• 省份：广东\n• 科目：行测\n• 数量：20道\n• 将生成PDF, 预计60秒', think: { steps: ['识别用户意图','分析用户意图','调用 DeepSeek 处理','调用 DeepSeek 分析并决策','无需调用工具, 直接回答'], elapsed: 5.9 } }
+      ],
+      draft: '',
+      thinkOpen: true,
+      suggestions: ['有哪些省份?', '国考行测', '安徽年份', '追及问题', '申论写作']
+    };
+  },
+  methods: {
+    send() {
+      if (!this.draft.trim()) return;
+      const q = this.draft.trim();
+      this.messages.push({ role: 'me', text: q });
+      this.draft = '';
+      setTimeout(() => {
+        this.messages.push({ role: 'ai', text: '收到您的问题: ' + q + '\n\n正在为您检索题库…', think: { steps: ['识别用户意图','检索题库','生成回答'], elapsed: (2 + Math.random() * 4).toFixed(1) } });
+      }, 500);
+    },
+    clearChat() { this.messages = []; },
+    handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } },
+    bubbleStyle(isMe) {
+      return Object.assign(
+        { maxWidth:'460px', padding:'10px 14px', borderRadius:'16px', fontSize:'14px', lineHeight:1.6 },
+        isMe
+          ? { background:'var(--gk-blue-600)', color:'#fff', borderTopRightRadius:'4px' }
+          : { background:'#fff', border:'1px solid var(--gk-gray-200)', color:'var(--gk-gray-800)', borderTopLeftRadius:'4px' }
+      );
+    }
+  },
+  template: `<card :padding="20">
+    <section-header emoji="📚" title="AI 对话测试 – 公考小智"/>
+    <div style="background:var(--gk-gray-50);border:1px solid var(--gk-gray-100);border-radius:10px;padding:16px;">
+      <div style="margin-bottom:12px;"><status-pill>服务已启动 — 2579 份文件, 32 个省份</status-pill></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <chip v-for="s in suggestions" :key="s" @click="draft = s">{{s}}</chip>
+        <chip variant="danger" @click="clearChat">清空对话</chip>
+      </div>
+      <div style="background:#fff;border:1px solid var(--gk-gray-200);border-radius:10px;padding:16px;min-height:280px;max-height:340px;overflow-y:auto;">
+        <div v-for="(m, i) in messages" :key="i" :style="{ display:'flex', gap:'10px', justifyContent: m.role==='me' ? 'flex-end' : 'flex-start', marginBottom:'16px' }">
+          <avatar v-if="m.role !== 'me'" kind="ai"/>
+          <div :style="bubbleStyle(m.role === 'me')">
+            <div v-if="m.think" style="background:var(--gk-gray-50);border:1px solid var(--gk-gray-200);border-radius:8px;padding:8px 12px;margin-bottom:10px;">
+              <div @click="thinkOpen = !thinkOpen" style="cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--gk-green-600);font-weight:500;font-size:13px;">
+                <span>✓</span> 已思考 (用时 {{m.think.elapsed}} 秒) <span style="margin-left:auto;font-size:10px;color:var(--gk-gray-400);">{{thinkOpen ? '▲' : '▼'}}</span>
+              </div>
+              <div v-if="thinkOpen" style="margin-top:8px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--gk-gray-500);padding-left:6px;">
+                <div v-for="(s, j) in m.think.steps" :key="j">✓ {{s}}</div>
+              </div>
+            </div>
+            <div style="white-space:pre-wrap;">{{m.text}}</div>
+          </div>
+          <avatar v-if="m.role === 'me'" kind="me"/>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <gk-input v-model="draft" placeholder="输入问题… Enter 发送, Shift+Enter 换行" @keydown="handleKey"/>
+        <btn @click="send">发送</btn>
+        <icon-btn title="清空" @click="clearChat">🗑</icon-btn>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:var(--gk-gray-400);">响应时间: 7750 ms · 对话轮次: {{Math.ceil(messages.length / 2)}}</div>
+    </div>
+  </card>`
+};
+
+const PracticePanel = {
+  components: { Card, GkInput, GkSelect, Btn },
+  data() {
+    return {
+      count: 20, type: '混合 (全部)', province: '全部省份', started: true,
+      answers: { q1: 'B', q2: 'A' },
+      progress: 15, total: 20,
+      questions: [
+        { n: 1, tag: '数量关系', src: '安徽 · 2023', text: '甲、乙两个公路相距 380 公里, A、B 两地同时对向行驶, 甲车速度为 60 km/h, 乙车速度为 80 km/h。两车相遇时, 甲车行驶了多少公里?', opts: ['A. 120 公里','B. 162.9 公里','C. 190 公里','D. 205.7 公里'], right: 'B', analysis: '相遇时间 = 380 ÷ (60+80) = 2.71 小时; 甲车行驶 = 60 × 2.71 ≈ 162.9 公里。' },
+        { n: 2, tag: '言语理解', src: '国考 · 2023', text: '填入画横线部分最恰当的一项是: 乡村振兴不是——蹴而就的, 需要久久为功, ___地推进。', opts: ['A. 雷厉风行','B. 循序渐进','C. 大刀阔斧','D. 浅尝辄止'], right: 'B', analysis: '"循序渐进"指按顺序分步推进, 契合"久久为功"的语境。' },
+        { n: 3, tag: '判断推理', src: '广东 · 2023', text: '医生：手术刀 相当于 (  )', opts: ['A. 教师：黑板','B. 作家：钢笔','C. 士兵：头盔','D. 厨师：菜刀'], right: 'D', analysis: null }
+      ],
+      statList: [['已答', '15 / 20', 'var(--gk-gray-900)'], ['正确率', '85.9%', 'var(--gk-green-600)'], ['平均用时', '42s', 'var(--gk-gray-900)'], ['薄弱项', '判断推理', 'var(--gk-red-600)']],
+      dist: [['言语理解', 6, '#6366f1'], ['数量关系', 5, '#10b981'], ['判断推理', 5, '#f59e0b'], ['资料分析', 2, '#8b5cf6'], ['常识判断', 2, '#ef4444']],
+      typeOpts: ['混合 (全部)', '常识判断', '言语理解', '数量关系', '判断推理', '资料分析'],
+      provinceOpts: ['全部省份', '国考', '广东', '安徽', '江苏', '浙江']
+    };
+  },
+  methods: {
+    optionMeta(q, key) {
+      const isRight = key === q.right;
+      const isSel = this.answers['q' + q.n] === key;
+      const answered = !!this.answers['q' + q.n];
+      let bg='#fff', bd='var(--gk-gray-200)', col='var(--gk-gray-800)', icon=null;
+      if (answered) {
+        if (isRight) { bg='var(--gk-green-50)'; bd='var(--gk-green-400)'; col='var(--gk-green-700)'; icon='✓'; }
+        else if (isSel) { bg='var(--gk-red-50)'; bd='#fca5a5'; col='var(--gk-red-600)'; icon='✗'; }
+      }
+      return { style: { padding:'10px 14px', background:bg, border:`1px solid ${bd}`, borderRadius:'8px', color:col, cursor: answered ? 'default' : 'pointer', fontSize:'14px', display:'flex', justifyContent:'space-between', alignItems:'center' }, icon, answered };
+    },
+    clickOption(q, key) { if (!this.answers['q' + q.n]) this.answers['q' + q.n] = key; },
+    isWrong(q) { return !!this.answers['q' + q.n] && this.answers['q' + q.n] !== q.right; },
+    isAnswered(q) { return !!this.answers['q' + q.n]; }
+  },
+  template: `<div style="display:grid;grid-template-columns:1fr 260px;gap:20px;align-items:flex-start;">
+    <div>
+      <div style="margin-bottom:8px;">
+        <div style="font-size:22px;font-weight:600;color:var(--gk-gray-900);">随机练习</div>
+        <div style="font-size:13px;color:var(--gk-gray-500);margin-top:4px;">选择题数、题型、省份, AI 实时出题, 每一道题都带解析和真题来源。</div>
+      </div>
+      <card :padding="16" style="margin-bottom:16px;">
+        <div style="display:flex;gap:12px;align-items:flex-end;">
+          <div style="width:90px;"><gk-input label="题数" v-model="count"/></div>
+          <div style="width:150px;"><gk-select label="题型" v-model="type" :options="typeOpts"/></div>
+          <div style="width:150px;"><gk-select label="省份" v-model="province" :options="provinceOpts"/></div>
+          <div style="flex:1;"></div>
+          <btn variant="success" @click="started = true">▶ 开始出题</btn>
+          <btn variant="ghost">■ 停止</btn>
+        </div>
+      </card>
+      <template v-if="started">
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gk-gray-500);margin-bottom:6px;">
+            <span>第 {{progress}} / {{total}} 题 · 已完成 {{progress}} 道</span>
+            <span style="color:var(--gk-green-600);font-weight:600;">{{Math.round(progress/total*100)}}%</span>
+          </div>
+          <div style="height:6px;background:var(--gk-gray-100);border-radius:3px;overflow:hidden;">
+            <div :style="{ width:(progress/total*100)+'%', height:'100%', background:'var(--gk-green-500)', transition:'width 300ms' }"></div>
+          </div>
+        </div>
+        <card v-for="q in questions" :key="q.n" :padding="18" style="margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-size:15px;font-weight:600;color:var(--gk-gray-900);">第 {{q.n}} 题</span>
+            <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--gk-violet-50);color:var(--gk-violet-700);font-weight:500;">{{q.tag}}</span>
+            <div style="flex:1;"></div>
+            <span style="font-size:11px;color:var(--gk-gray-400);">{{q.src}}</span>
+          </div>
+          <div style="font-size:14px;color:var(--gk-gray-900);line-height:1.75;margin-bottom:12px;">{{q.text}}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div v-for="o in q.opts" :key="o" @click="clickOption(q, o[0])" :style="optionMeta(q, o[0]).style">
+              <span>{{o}}</span>
+              <span v-if="optionMeta(q, o[0]).icon" style="font-weight:600;">{{optionMeta(q, o[0]).icon}}</span>
+            </div>
+          </div>
+          <div v-if="isAnswered(q) && q.analysis" :style="{ marginTop:'12px', padding:'10px 12px', background: isWrong(q) ? 'var(--gk-red-50)' : 'var(--gk-green-50)', border:'1px solid '+(isWrong(q) ? '#fecaca' : 'var(--gk-green-200)'), borderRadius:'8px', fontSize:'12.5px', color:'var(--gk-gray-700)', lineHeight:1.65 }">
+            <span :style="{ color: isWrong(q) ? 'var(--gk-red-600)' : 'var(--gk-green-700)', fontWeight:600, marginRight:'6px' }">{{ isWrong(q) ? '✗ 正确答案 ' + q.right : '✓ 解析' }}</span>
+            {{q.analysis}}
+          </div>
+        </card>
+        <card :padding="24" style="text-align:center;background:linear-gradient(135deg, #ecfdf5, #d1fae5);border:1px solid var(--gk-green-200);">
+          <div style="font-size:40px;font-weight:800;color:var(--gk-green-600);letter-spacing:-0.02em;">85%</div>
+          <div style="font-size:13px;color:var(--gk-gray-700);margin-top:6px;">答对 17 / 20 题</div>
+          <div style="font-size:12px;color:var(--gk-gray-500);margin-top:4px;">优秀·继续保持 💪</div>
+        </card>
+      </template>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;position:sticky;top:16px;">
+      <card :padding="16">
+        <div style="font-size:13px;font-weight:600;color:var(--gk-gray-900);margin-bottom:14px;display:flex;align-items:center;gap:6px;"><span>📈</span>本次数据</div>
+        <div v-for="(item, i) in statList" :key="item[0]" :style="{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderTop: i ? '1px solid var(--gk-gray-100)' : 'none', fontSize:'13px' }">
+          <span style="color:var(--gk-gray-500);">{{item[0]}}</span>
+          <span :style="{ color: item[2], fontWeight:600 }">{{item[1]}}</span>
+        </div>
+      </card>
+      <card :padding="16">
+        <div style="font-size:13px;font-weight:600;color:var(--gk-gray-900);margin-bottom:10px;display:flex;align-items:center;gap:6px;"><span>🎯</span>模块分布</div>
+        <div v-for="item in dist" :key="item[0]" style="margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--gk-gray-600);margin-bottom:3px;">
+            <span>{{item[0]}}</span><span>{{item[1]}} 题</span>
+          </div>
+          <div style="height:4px;background:var(--gk-gray-100);border-radius:2px;overflow:hidden;">
+            <div :style="{ width:(item[1]/20*100)+'%', height:'100%', background: item[2] }"></div>
+          </div>
+        </div>
+      </card>
+    </div>
+  </div>`
+};
+
+const DownloadPanel = {
+  components: { Card, SectionHeader, GkInput, Btn },
+  data() {
+    return {
+      q: '',
+      toast: null,
+      hoverKey: null,
+      provinces: [
+        { k: 'national', name: '国考', files: 412, size: '186 MB', hot: true },
+        { k: 'beijing', name: '北京', files: 58, size: '24 MB' },
+        { k: 'tianjin', name: '天津', files: 46, size: '19 MB' },
+        { k: 'hebei', name: '河北', files: 72, size: '31 MB' },
+        { k: 'shanxi', name: '山西', files: 64, size: '27 MB' },
+        { k: 'neimenggu', name: '内蒙古', files: 52, size: '21 MB' },
+        { k: 'liaoning', name: '辽宁', files: 68, size: '28 MB' },
+        { k: 'jilin', name: '吉林', files: 54, size: '22 MB' },
+        { k: 'heilongjiang', name: '黑龙江', files: 57, size: '23 MB' },
+        { k: 'shanghai', name: '上海', files: 62, size: '26 MB', hot: true },
+        { k: 'jiangsu', name: '江苏', files: 88, size: '38 MB', hot: true },
+        { k: 'zhejiang', name: '浙江', files: 81, size: '34 MB', hot: true },
+        { k: 'anhui', name: '安徽', files: 74, size: '30 MB' },
+        { k: 'fujian', name: '福建', files: 69, size: '28 MB' },
+        { k: 'jiangxi', name: '江西', files: 66, size: '27 MB' },
+        { k: 'shandong', name: '山东', files: 92, size: '40 MB', hot: true },
+        { k: 'henan', name: '河南', files: 86, size: '36 MB' },
+        { k: 'hubei', name: '湖北', files: 78, size: '32 MB' },
+        { k: 'hunan', name: '湖南', files: 76, size: '31 MB' },
+        { k: 'guangdong', name: '广东', files: 104, size: '44 MB', hot: true },
+        { k: 'guangxi', name: '广西', files: 62, size: '25 MB' },
+        { k: 'hainan', name: '海南', files: 42, size: '17 MB' },
+        { k: 'chongqing', name: '重庆', files: 58, size: '23 MB' },
+        { k: 'sichuan', name: '四川', files: 84, size: '35 MB' },
+        { k: 'guizhou', name: '贵州', files: 56, size: '22 MB' },
+        { k: 'yunnan', name: '云南', files: 61, size: '25 MB' },
+        { k: 'xizang', name: '西藏', files: 34, size: '14 MB' },
+        { k: 'shaanxi', name: '陕西', files: 68, size: '28 MB' },
+        { k: 'gansu', name: '甘肃', files: 52, size: '21 MB' },
+        { k: 'qinghai', name: '青海', files: 38, size: '15 MB' },
+        { k: 'ningxia', name: '宁夏', files: 41, size: '16 MB' },
+        { k: 'xinjiang', name: '新疆', files: 49, size: '20 MB' }
+      ],
+      recent: [
+        { name: '2024年广东省公务员考试行测真题（含解析）.pdf', province: '广东', year: '2024', subject: '行测', size: '4.2 MB' },
+        { name: '2024年国考行测副省级真题.pdf', province: '国考', year: '2024', subject: '行测', size: '5.1 MB' },
+        { name: '2023年江苏省考申论A类真题.pdf', province: '江苏', year: '2023', subject: '申论', size: '2.8 MB' },
+        { name: '2024年浙江省考行测A类真题.pdf', province: '浙江', year: '2024', subject: '行测', size: '4.0 MB' }
+      ]
+    };
+  },
+  computed: {
+    filtered() { return this.provinces.filter(p => !this.q || p.name.includes(this.q) || p.k.includes(this.q.toLowerCase())); },
+    totalFiles() { return this.provinces.reduce((a, p) => a + p.files, 0); }
+  },
+  methods: {
+    handleDownload(p) { this.toast = '已开始下载：' + p.name + ' 真题合集.zip'; setTimeout(() => this.toast = null, 2600); }
+  },
+  template: `<div style="display:flex;flex-direction:column;gap:20px;">
+    <card :padding="20">
+      <section-header emoji="📦" title="真题下载">
+        <template #right>
+          <div style="font-size:12px;color:var(--gk-gray-500);">共 {{provinces.length}} 个省份 · {{totalFiles.toLocaleString()}} 份文件 · 全部免费</div>
+        </template>
+      </section-header>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;">
+        <div style="flex:1;max-width:320px;"><gk-input v-model="q" placeholder="🔍 搜索省份..."/></div>
+        <btn variant="practice" @click="handleDownload({ name: '全部省份 (32 包)' })">↓ 一键下载全部 (1.24 GB)</btn>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));gap:10px;">
+        <div v-for="p in filtered" :key="p.k"
+          @mouseenter="hoverKey = p.k" @mouseleave="hoverKey = null"
+          :style="{ background:'#fff', border:'1px solid '+(hoverKey === p.k ? 'var(--gk-green-400)' : 'var(--gk-gray-200)'), borderRadius:'10px', padding:'12px 14px', display:'flex', flexDirection:'column', gap:'6px', cursor:'pointer', transition:'all 180ms', position:'relative' }">
+          <span v-if="p.hot" style="position:absolute;top:8px;right:8px;font-size:10px;padding:2px 6px;border-radius:4px;background:var(--gk-red-50);color:var(--gk-red-600);font-weight:600;">热门</span>
+          <div style="font-size:15px;font-weight:600;color:var(--gk-gray-900);">{{p.name}}</div>
+          <div style="font-size:12px;color:var(--gk-gray-500);">{{p.files}} 份 · {{p.size}}</div>
+          <button @click="handleDownload(p)"
+            :style="{ marginTop:'4px', border:0, background: hoverKey === p.k ? 'var(--gk-green-500)' : 'var(--gk-green-50)', color: hoverKey === p.k ? '#fff' : 'var(--gk-green-700)', fontSize:'12px', fontWeight:500, padding:'6px 0', borderRadius:'6px', cursor:'pointer', fontFamily:'inherit', transition:'all 180ms' }">↓ 下载 ZIP</button>
+        </div>
+      </div>
+      <div v-if="filtered.length === 0" style="padding:40px;text-align:center;color:var(--gk-gray-400);font-size:13px;">没有找到匹配的省份</div>
+    </card>
+    <card :padding="20">
+      <section-header emoji="📄" title="最近更新的 PDF 真题">
+        <template #right><a style="font-size:12px;color:var(--gk-blue-600);cursor:pointer;">查看全部 →</a></template>
+      </section-header>
+      <div>
+        <div v-for="(f, i) in recent" :key="i" :style="{ display:'flex', alignItems:'center', padding:'10px 0', borderTop: i ? '1px solid var(--gk-gray-100)' : 'none', gap:'12px' }">
+          <div style="width:32px;height:32px;border-radius:6px;background:var(--gk-red-50);color:var(--gk-red-600);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">PDF</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:500;color:var(--gk-gray-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{f.name}}</div>
+            <div style="font-size:11px;color:var(--gk-gray-500);margin-top:2px;">{{f.province}} · {{f.year}} · {{f.subject}} · {{f.size}}</div>
+          </div>
+          <button style="border:1px solid var(--gk-gray-200);background:#fff;color:var(--gk-gray-600);font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:inherit;">预览</button>
+          <button style="border:0;background:var(--gk-blue-600);color:#fff;font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:500;">↓ PDF</button>
+        </div>
+      </div>
+    </card>
+    <div v-if="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--gk-gray-900);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;box-shadow:0 10px 25px rgba(0,0,0,0.2);display:flex;align-items:center;gap:8px;z-index:100;">
+      <span style="color:var(--gk-green-400);">✓</span>{{toast}}
+    </div>
+  </div>`
+};
+
+const StudyPlan = {
+  components: { Card, SectionHeader },
+  data() { return { days: [1,2,3,4,5,6,7], done: [1,1,1,1,0.6,0,0], labels: ['一','二','三','四','五','六','日'] }; },
+  methods: {
+    barStyle(i) { return { position:'absolute', inset:0, top:((1-this.done[i])*100)+'%', background: this.done[i]===1 ? 'var(--gk-green-500)' : this.done[i]>0 ? 'var(--gk-green-300)' : 'transparent' }; }
+  },
+  template: `<card :padding="20">
+    <section-header emoji="📅" title="本周学习计划">
+      <template #right><span style="font-size:12px;color:var(--gk-green-600);font-weight:500;">已完成 65%</span></template>
+    </section-header>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <div v-for="(d, i) in days" :key="d" style="flex:1;text-align:center;">
+        <div style="font-size:11px;color:var(--gk-gray-500);margin-bottom:6px;">周{{labels[i]}}</div>
+        <div style="height:48px;background:var(--gk-gray-100);border-radius:6px;position:relative;overflow:hidden;">
+          <div :style="barStyle(i)"></div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--gk-gray-600);line-height:1.7;">今日目标: 完成 <b style="color:var(--gk-gray-900);">行测 30 题</b> + <b style="color:var(--gk-gray-900);">申论范文精读 1 篇</b></div>
+  </card>`
+};
+
+const MistakeBook = {
+  components: { Card, Chip, Btn },
+  data() {
+    return {
+      filter: '全部',
+      filters: ['全部', '未掌握', '已掌握'],
+      stats: [
+        { label: '判断推理', n: 12, fg: 'var(--gk-violet-700)' },
+        { label: '言语理解', n: 7,  fg: 'var(--gk-indigo-700)' },
+        { label: '数量关系', n: 5,  fg: 'var(--gk-green-700)' },
+        { label: '资料分析', n: 3,  fg: 'var(--gk-amber-700)' }
+      ],
+      items: [
+        { tag: '判断推理', src: '广东 · 2023', wrong: 2, starred: true, done: false,
+          text: '医生: 手术刀 最为接近的类比是: 联想与工具的关联。要寻找两者之间最紧密的关系。',
+          opts: [
+            { k: 'A', t: '教师: 黑板', right: false },
+            { k: 'B', t: '作家: 钢笔', right: false, note: '已排除' },
+            { k: 'C', t: '士兵: 头盔', right: true,  note: '正确答案' },
+            { k: 'D', t: '厨师: 菜刀', right: false, note: '我的' }
+          ],
+          analysis: '类比中关键考察"核心工具"特征。手术刀是医生最核心的工作工具, 菜刀是厨师的核心工具。'
+        },
+        { tag: '判断推理', src: '江苏 · 2022', wrong: 3, starred: true, done: false,
+          text: '外来文化对本地传统文化造成的影响不容忽视, 以下能够最大地支持这段话论点的一项是( )。',
+          opts: [], analysis: null },
+        { tag: '数量关系', src: '国考 · 2023', wrong: 1, starred: false, done: false,
+          text: '甲乙两人同时从 A 地出发前往 B 地, 甲的速度是乙的 3 公里, 甲到达 B 地后立即返回, 在距离 B 地 6 公里处与乙相遇。',
+          opts: [], analysis: null },
+        { tag: '言语理解', src: '浙江 · 2023', wrong: 2, starred: false, done: true,
+          text: '填入画横线部分最恰当的一项是接下来的带头人选, 名植入夹___地处理转代关系。',
+          opts: [], analysis: null }
+      ]
+    };
+  },
+  computed: {
+    filtered() { return this.items.filter(it => this.filter === '全部' || (this.filter === '未掌握' && !it.done) || (this.filter === '已掌握' && it.done)); }
+  },
+  methods: {
+    optionStyle(o) {
+      let bg='#fff', bd='var(--gk-gray-200)', col='var(--gk-gray-700)';
+      if (o.right) { bg='var(--gk-green-50)'; bd='var(--gk-green-300)'; col='var(--gk-green-700)'; }
+      else if (o.note === '我的') { bg='var(--gk-red-50)'; bd='#fca5a5'; col='var(--gk-red-600)'; }
+      return { padding:'8px 14px', background:bg, border:`1px solid ${bd}`, borderRadius:'8px', color:col, fontSize:'13px', display:'flex', justifyContent:'space-between', alignItems:'center' };
+    },
+    optionRight(o) {
+      if (o.right) return { text: '✓ 正确答案', color: 'var(--gk-green-600)' };
+      if (o.note === '我的') return { text: '我选的', color: 'var(--gk-red-600)' };
+      if (o.note) return { text: o.note, color: 'var(--gk-gray-400)' };
+      return null;
+    }
+  },
+  template: `<div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:22px;font-weight:600;color:var(--gk-gray-900);">错题本</div>
+      <div style="font-size:13px;color:var(--gk-gray-500);margin-top:4px;">错题自动收录, 按学习结果 AI 智能归类, 一览自己的薄弱点。</div>
+    </div>
+    <card :padding="16" style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:600;color:var(--gk-gray-900);display:flex;align-items:center;gap:6px;flex:1;"><span>🧩</span>按题型统计</div>
+        <div style="font-size:12px;color:var(--gk-gray-500);">共 27 道错题</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;">
+        <div v-for="(s, i) in stats" :key="i"
+          :style="{ padding:'16px 12px', background: i === 0 ? 'var(--gk-violet-50)' : '#fff', border: '1px solid '+(i === 0 ? 'var(--gk-violet-200)' : 'var(--gk-gray-200)'), borderRadius:'10px', textAlign:'center', cursor:'pointer' }">
+          <div :style="{ fontSize:'28px', fontWeight:800, color: s.fg, letterSpacing:'-0.02em', lineHeight:1 }">{{s.n}}</div>
+          <div style="font-size:12px;color:var(--gk-gray-600);margin-top:6px;">{{s.label}}</div>
+        </div>
+      </div>
+    </card>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <chip v-for="f in filters" :key="f" :active="filter === f" @click="filter = f">{{f}}</chip>
+      <div style="flex:1;"></div>
+      <span style="font-size:12px;color:var(--gk-gray-500);">已选 2 项</span>
+      <btn variant="ai">✨ AI 分析当前错题</btn>
+      <btn variant="ghost">导出</btn>
+    </div>
+    <div v-for="(it, i) in filtered" :key="i"
+      :style="{ marginBottom:'10px', border: i === 0 ? '1px solid var(--gk-green-300)' : '1px solid var(--gk-gray-200)', background: i === 0 ? 'var(--gk-green-50)' : '#fff', borderRadius:'12px', overflow:'hidden' }">
+      <div style="padding:14px 18px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <input type="checkbox" :checked="i === 0" style="accent-color:var(--gk-green-500);"/>
+          <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--gk-violet-50);color:var(--gk-violet-700);font-weight:500;">{{it.tag}}</span>
+          <span style="font-size:12px;color:var(--gk-gray-500);">{{it.src}}</span>
+          <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--gk-red-50);color:var(--gk-red-600);font-weight:500;">错 {{it.wrong}} 次</span>
+          <div style="flex:1;"></div>
+          <span :style="{ fontSize:'13px', color: it.starred ? 'var(--gk-amber-500)' : 'var(--gk-gray-300)', cursor:'pointer' }">★</span>
+          <span style="font-size:12px;color:var(--gk-gray-400);cursor:pointer;">⋯</span>
+        </div>
+        <div :style="{ fontSize:'14px', color:'var(--gk-gray-900)', lineHeight:1.7, marginBottom: i === 0 ? '12px' : '0' }">{{it.text}}</div>
+        <div v-if="i === 0 && it.opts.length > 0" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+          <div v-for="o in it.opts" :key="o.k" :style="optionStyle(o)">
+            <span>{{o.k}}. {{o.t}}</span>
+            <span v-if="optionRight(o)" :style="{ fontSize:'11px', color: optionRight(o).color, fontWeight:500 }">{{optionRight(o).text}}</span>
+          </div>
+        </div>
+        <div v-if="i === 0 && it.analysis" style="padding:10px 12px;background:#fff;border:1px solid var(--gk-gray-200);border-radius:8px;font-size:12.5px;color:var(--gk-gray-700);line-height:1.7;">
+          <span style="color:var(--gk-green-600);font-weight:600;margin-right:6px;">解析</span>{{it.analysis}}
+        </div>
+        <div v-if="i === 0" style="display:flex;gap:8px;margin-top:12px;">
+          <btn variant="ghost" :style="{ fontSize:'12px', padding:'6px 12px' }">⟲ 重做此题</btn>
+          <btn variant="ghost" :style="{ fontSize:'12px', padding:'6px 12px' }">✓ 标为已掌握</btn>
+        </div>
+      </div>
+    </div>
+    <card :padding="18" style="margin-top:14px;">
+      <div style="display:flex;align-items:center;margin-bottom:14px;">
+        <div style="font-size:15px;font-weight:600;color:var(--gk-gray-900);display:flex;align-items:center;gap:6px;flex:1;"><span style="color:var(--gk-indigo-600);">✨</span>AI 错题分析报告</div>
+        <span style="font-size:12px;color:var(--gk-blue-600);cursor:pointer;">⟲ 更新</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;font-size:13px;color:var(--gk-gray-700);line-height:1.7;">
+        <div>
+          <div style="font-weight:600;color:var(--gk-gray-900);margin-bottom:4px;display:flex;align-items:center;gap:6px;"><span style="width:3px;height:14px;background:var(--gk-green-500);border-radius:2px;"></span>薄弱点分析</div>
+          你集中在 2 道题都属于判断推理 - 类比推理大类, 错误核心: 对题目比比关系中的"核心性"与"专属性"把握还不够精准。
+        </div>
+        <div>
+          <div style="font-weight:600;color:var(--gk-gray-900);margin-bottom:4px;display:flex;align-items:center;gap:6px;"><span style="width:3px;height:14px;background:var(--gk-indigo-500);border-radius:2px;"></span>知识点建议</div>
+          <ul style="margin:0;padding-left:18px;list-style:disc;">
+            <li>统一语义类别之间的关系类型 (并列 / 从属 / 用途 / 属性)</li>
+            <li>高频结构: A 之于 B 就像 X 之于 Y</li>
+            <li>代入选项, 排除"关系成立但范围不够紧密"的选项</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-weight:600;color:var(--gk-gray-900);margin-bottom:4px;display:flex;align-items:center;gap:6px;"><span style="width:3px;height:14px;background:var(--gk-amber-500);border-radius:2px;"></span>推荐练习</div>
+          <ul style="margin:0;padding-left:18px;list-style:disc;">
+            <li>判断推理 - 类比推理专项 20 题</li>
+            <li>重点真题: 2021-2023 国考判推真题精选</li>
+          </ul>
+        </div>
+      </div>
+    </card>
+  </div>`
+};
+
+const AuthScreen = {
+  emits: ['switch'],
+  data() {
+    return {
+      isLogin: true,
+      showPw: false,
+      loading: false,
+      errMsg: '',
+      okMsg: '',
+      form: { username: '', password: '', password2: '' },
+      animId: null, W: 0, H: 0, particles: [], ctx: null
+    };
+  },
+  mounted() {
+    this.initCanvas();
+    this.animate();
+    window.addEventListener('resize', this.handleResize);
+  },
+  beforeUnmount() {
+    cancelAnimationFrame(this.animId);
+    window.removeEventListener('resize', this.handleResize);
+  },
+  methods: {
+    makeParticle() {
+      const W = this.W, H = this.H;
+      return {
+        x: Math.random() * W, y: Math.random() * H,
+        r: Math.random() * 1.5 + 0.5,
+        vx: (Math.random() - .5) * .4, vy: (Math.random() - .5) * .4,
+        alpha: Math.random() * .5 + .1,
+        color: Math.random() > .6 ? '#10b981' : Math.random() > .5 ? '#4f46e5' : '#6ee7b7'
+      };
+    },
+    initCanvas() {
+      const c = this.$refs.canvas;
+      this.ctx = c.getContext('2d');
+      this.W = c.width = window.innerWidth;
+      this.H = c.height = window.innerHeight;
+      this.particles = Array.from({ length: 120 }, () => this.makeParticle());
+    },
+    animate() {
+      const { ctx, W, H, particles } = this;
+      ctx.clearRect(0, 0, W, H);
+      for (const p of particles) {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > W || p.y < 0 || p.y > H) Object.assign(p, this.makeParticle());
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 100) {
+            ctx.save();
+            ctx.globalAlpha = (1 - d / 100) * .08;
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = .5;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+      }
+      this.animId = requestAnimationFrame(this.animate);
+    },
+    handleResize() {
+      this.W = this.$refs.canvas.width = window.innerWidth;
+      this.H = this.$refs.canvas.height = window.innerHeight;
+      this.particles = Array.from({ length: 120 }, () => this.makeParticle());
+    },
+    sleep(ms) { return new Promise(r => setTimeout(r, ms)); },
+    async doLogin() {
+      const { username, password } = this.form;
+      if (!username || !password) { this.errMsg = '请填写用户名和密码'; return; }
+      this.errMsg = ''; this.okMsg = ''; this.loading = true;
+      await this.sleep(500);
+      this.loading = false;
+      const db = JSON.parse(localStorage.getItem('gk_users') || '{}');
+      if (!db[username]) { this.errMsg = '账号不存在，去注册吧'; return; }
+      if (db[username] !== password) { this.errMsg = '密码不正确'; return; }
+      this.okMsg = '✅ 登录成功，欢迎回来 ' + username + '！';
+      setTimeout(() => this.$emit('switch', null), 600);
+    },
+    async doRegister() {
+      const { username, password, password2 } = this.form;
+      if (!username || !password) { this.errMsg = '请填写完整信息'; return; }
+      if (password !== password2) { this.errMsg = '两次密码不一致'; return; }
+      if (password.length < 6) { this.errMsg = '密码至少6位'; return; }
+      this.errMsg = ''; this.okMsg = ''; this.loading = true;
+      await this.sleep(500);
+      this.loading = false;
+      const db = JSON.parse(localStorage.getItem('gk_users') || '{}');
+      if (db[username]) { this.errMsg = '该用户名已被注册'; return; }
+      db[username] = password;
+      localStorage.setItem('gk_users', JSON.stringify(db));
+      this.okMsg = '🎉 注册成功，正在跳转...';
+      setTimeout(() => this.$emit('switch', null), 600);
+    }
+  },
+  template: `<div class="login-page">
+    <canvas ref="canvas" class="bg-canvas"></canvas>
+    <div class="overlay"></div>
+    <div class="login-card">
+      <div class="left">
+        <div class="brand">
+          <div class="brand-mark">智</div>
+          <span class="brand-name">公考小智</span>
+        </div>
+        <div class="floats">
+          <div class="circle c1">📚</div>
+          <div class="circle c2"></div>
+          <div class="circle c3"></div>
+          <div class="circle c4"></div>
+        </div>
+        <div class="left-bottom">
+          <div class="tagline">你的公考智慧搭子 🌱</div>
+          <div class="chips">
+            <span class="chip">📁 2,579 份真题</span>
+            <span class="chip">🗺 32 个省份</span>
+            <span class="chip">✨ AI 出题</span>
+          </div>
+        </div>
+      </div>
+      <div class="right">
+        <h1 class="title">{{ isLogin ? '欢迎回来 👋' : '创建账号 ✨' }}</h1>
+        <p class="sub">{{ isLogin ? '登录后开始备考' : '加入公考小智，开始备考之旅' }}</p>
+        <div class="tabs">
+          <button :class="['tab', { active: isLogin }]" @click="isLogin = true">登录</button>
+          <button :class="['tab', { active: !isLogin }]" @click="isLogin = false">注册</button>
+        </div>
+        <form v-if="isLogin" @submit.prevent="doLogin" class="form">
+          <div class="field">
+            <label>用户名</label>
+            <input v-model="form.username" type="text" placeholder="请输入用户名" autocomplete="username"/>
+          </div>
+          <div class="field">
+            <label>密码</label>
+            <div class="pw-wrap">
+              <input v-model="form.password" :type="showPw ? 'text' : 'password'" placeholder="请输入密码" autocomplete="current-password"/>
+              <span class="eye" @click="showPw = !showPw">{{ showPw ? '🙈' : '👁' }}</span>
+            </div>
+          </div>
+          <button type="submit" class="submit-btn" :disabled="loading">
+            <span v-if="loading" class="spinner"></span>
+            {{ loading ? '登录中...' : '登录' }}
+          </button>
+        </form>
+        <form v-else @submit.prevent="doRegister" class="form">
+          <div class="field">
+            <label>用户名 <em>（2-20位）</em></label>
+            <input v-model="form.username" type="text" placeholder="设置你的用户名" autocomplete="username"/>
+          </div>
+          <div class="field">
+            <label>密码 <em>（至少6位）</em></label>
+            <div class="pw-wrap">
+              <input v-model="form.password" :type="showPw ? 'text' : 'password'" placeholder="设置密码" autocomplete="new-password"/>
+              <span class="eye" @click="showPw = !showPw">{{ showPw ? '🙈' : '👁' }}</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>确认密码</label>
+            <input v-model="form.password2" type="password" placeholder="再输一次密码" autocomplete="new-password"/>
+          </div>
+          <button type="submit" class="submit-btn" :disabled="loading">
+            <span v-if="loading" class="spinner"></span>
+            {{ loading ? '注册中...' : '注册' }}
+          </button>
+        </form>
+        <div v-if="errMsg" class="err">{{ errMsg }}</div>
+        <div v-if="okMsg" class="ok">{{ okMsg }}</div>
+        <button class="back-link" @click="$emit('switch', null)">← 先逛逛，稍后登录</button>
+      </div>
+    </div>
+  </div>`
+};
+
+// ---------- App ----------
+const App = {
+  components: { TopNav, ChatPanel, PracticePanel, DownloadPanel, MistakeBook, StudyPlan, AuthScreen },
+  data() { return { active: 'chat', auth: null }; },
+  template: `<auth-screen v-if="auth" @switch="v => auth = v"/>
+  <template v-else>
+    <top-nav :active="active" @change="v => active = v" @login="auth = 'login'"/>
+    <div class="page">
+      <div v-if="active === 'chat'" class="two-col">
+        <chat-panel/>
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <study-plan/>
+          <mistake-book/>
+        </div>
+      </div>
+      <practice-panel v-if="active === 'practice'"/>
+      <download-panel v-if="active === 'download'"/>
+      <mistake-book v-if="active === 'mistakes'"/>
+      <study-plan v-if="active === 'plan'"/>
+    </div>
+  </template>`
+};
+
+createApp(App).mount('#app');
+</script>
+</body>
+</html>

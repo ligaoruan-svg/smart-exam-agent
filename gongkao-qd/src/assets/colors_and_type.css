@@ -1,0 +1,247 @@
+/* ==========================================================================
+   公考小智 · Colors & Type
+   Observed from the product: a clean, modern Chinese web UI using
+   Tailwind-style neutrals with multi-accent semantic colors.
+   Primary brand color: green (growth, "pass the exam").
+   ========================================================================== */
+
+/* ---------- Font faces (Google Fonts CDN, subsets=chinese-simplified) ----- */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* =====================================================================
+     COLOR — Neutrals (slate, tailwind-ish)
+     ===================================================================== */
+  --gk-white:        #ffffff;
+  --gk-gray-50:      #f9fafb;
+  --gk-gray-100:     #f3f4f6;   /* page bg */
+  --gk-gray-200:     #e5e7eb;   /* card border */
+  --gk-gray-300:     #d1d5db;
+  --gk-gray-400:     #9ca3af;
+  --gk-gray-500:     #6b7280;   /* secondary text */
+  --gk-gray-600:     #4b5563;
+  --gk-gray-700:     #374151;   /* body text */
+  --gk-gray-800:     #1f2937;
+  --gk-gray-900:     #111827;   /* headings */
+
+  /* =====================================================================
+     COLOR — Brand (Green = growth, pass, encouragement)
+     ===================================================================== */
+  --gk-green-50:     #ecfdf5;
+  --gk-green-100:    #d1fae5;
+  --gk-green-200:    #a7f3d0;
+  --gk-green-300:    #6ee7b7;
+  --gk-green-400:    #34d399;
+  --gk-green-500:    #10b981;   /* primary brand */
+  --gk-green-600:    #059669;   /* primary hover */
+  --gk-green-700:    #047857;
+  --gk-green-800:    #065f46;
+  --gk-green-900:    #064e3b;
+
+  /* =====================================================================
+     COLOR — Accents (from observed UI)
+     blue  = primary action ("发送")
+     indigo = AI / "智" persona
+     violet = secondary action ("开始出题")
+     amber = warning
+     red   = destructive ("清空对话")
+     ===================================================================== */
+  --gk-blue-50:      #eff6ff;
+  --gk-blue-100:     #dbeafe;
+  --gk-blue-500:     #3b82f6;
+  --gk-blue-600:     #2563eb;   /* send button */
+  --gk-blue-700:     #1d4ed8;
+
+  --gk-indigo-50:    #eef2ff;
+  --gk-indigo-100:   #e0e7ff;
+  --gk-indigo-500:   #6366f1;
+  --gk-indigo-600:   #4f46e5;   /* AI avatar */
+  --gk-indigo-700:   #4338ca;
+
+  --gk-violet-50:    #f5f3ff;
+  --gk-violet-500:   #8b5cf6;
+  --gk-violet-600:   #7c3aed;   /* practice CTA */
+  --gk-violet-700:   #6d28d9;
+
+  --gk-amber-50:     #fffbeb;
+  --gk-amber-500:    #f59e0b;
+  --gk-amber-600:    #d97706;
+
+  --gk-red-50:       #fef2f2;
+  --gk-red-100:      #fee2e2;
+  --gk-red-500:      #ef4444;
+  --gk-red-600:      #dc2626;
+  --gk-red-700:      #b91c1c;
+
+  /* =====================================================================
+     SEMANTIC COLOR
+     ===================================================================== */
+  --gk-bg:           var(--gk-gray-100);
+  --gk-bg-elevated: var(--gk-white);
+  --gk-bg-inset:     var(--gk-gray-50);
+
+  --gk-fg:           var(--gk-gray-900);        /* h1 / primary text */
+  --gk-fg-body:      var(--gk-gray-700);
+  --gk-fg-muted:     var(--gk-gray-500);
+  --gk-fg-subtle:    var(--gk-gray-400);
+  --gk-fg-on-color:  var(--gk-white);
+
+  --gk-border:       var(--gk-gray-200);
+  --gk-border-strong:var(--gk-gray-300);
+
+  --gk-primary:      var(--gk-green-500);
+  --gk-primary-hover:var(--gk-green-600);
+  --gk-action:       var(--gk-blue-600);       /* CTAs inside product */
+  --gk-action-hover: var(--gk-blue-700);
+  --gk-ai:           var(--gk-indigo-600);
+  --gk-practice:     var(--gk-violet-600);
+
+  --gk-success:      var(--gk-green-500);
+  --gk-success-bg:   var(--gk-green-50);
+  --gk-warning:      var(--gk-amber-500);
+  --gk-warning-bg:   var(--gk-amber-50);
+  --gk-danger:       var(--gk-red-500);
+  --gk-danger-bg:    var(--gk-red-50);
+  --gk-info:         var(--gk-blue-500);
+  --gk-info-bg:      var(--gk-blue-50);
+
+  /* =====================================================================
+     TYPOGRAPHY
+     ===================================================================== */
+  --gk-font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei',
+                  -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                  'Helvetica Neue', Arial, sans-serif;
+  --gk-font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC',
+                   'STSong', serif;
+  --gk-font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas,
+                  'Liberation Mono', monospace;
+
+  /* Type scale (web) */
+  --gk-text-xs:    12px;
+  --gk-text-sm:    13px;
+  --gk-text-base:  14px;   /* product default */
+  --gk-text-md:    15px;
+  --gk-text-lg:    16px;
+  --gk-text-xl:    18px;
+  --gk-text-2xl:   20px;
+  --gk-text-3xl:   24px;
+  --gk-text-4xl:   30px;
+  --gk-text-5xl:   36px;
+  --gk-text-6xl:   48px;
+
+  --gk-leading-tight:  1.25;
+  --gk-leading-snug:   1.4;
+  --gk-leading-normal: 1.6;
+  --gk-leading-relaxed:1.75;
+
+  --gk-weight-regular: 400;
+  --gk-weight-medium:  500;
+  --gk-weight-semibold:600;
+  --gk-weight-bold:    700;
+
+  /* =====================================================================
+     SPACING (4-based, Tailwind-aligned)
+     ===================================================================== */
+  --gk-space-0:  0;
+  --gk-space-1:  4px;
+  --gk-space-2:  8px;
+  --gk-space-3:  12px;
+  --gk-space-4:  16px;
+  --gk-space-5:  20px;
+  --gk-space-6:  24px;
+  --gk-space-8:  32px;
+  --gk-space-10: 40px;
+  --gk-space-12: 48px;
+  --gk-space-16: 64px;
+
+  /* =====================================================================
+     RADIUS (generous, friendly)
+     ===================================================================== */
+  --gk-radius-sm:   4px;
+  --gk-radius:      6px;
+  --gk-radius-md:   8px;
+  --gk-radius-lg:   12px;   /* cards */
+  --gk-radius-xl:   16px;   /* chat bubbles */
+  --gk-radius-2xl:  20px;
+  --gk-radius-pill: 9999px; /* chips, avatars */
+
+  /* =====================================================================
+     SHADOWS (soft, subtle)
+     ===================================================================== */
+  --gk-shadow-xs: 0 1px 2px rgba(17, 24, 39, 0.04);
+  --gk-shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05), 0 1px 3px rgba(17, 24, 39, 0.04);
+  --gk-shadow-md: 0 4px 6px -1px rgba(17, 24, 39, 0.06), 0 2px 4px -2px rgba(17, 24, 39, 0.04);
+  --gk-shadow-lg: 0 10px 15px -3px rgba(17, 24, 39, 0.06), 0 4px 6px -4px rgba(17, 24, 39, 0.04);
+  --gk-shadow-focus: 0 0 0 3px rgba(16, 185, 129, 0.25); /* green focus ring */
+
+  /* =====================================================================
+     MOTION
+     ===================================================================== */
+  --gk-ease:       cubic-bezier(0.4, 0, 0.2, 1);
+  --gk-ease-out:   cubic-bezier(0, 0, 0.2, 1);
+  --gk-ease-in:    cubic-bezier(0.4, 0, 1, 1);
+  --gk-duration-fast:   120ms;
+  --gk-duration-base:   180ms;
+  --gk-duration-slow:   300ms;
+}
+
+/* =====================================================================
+   SEMANTIC ELEMENT STYLES
+   Apply .gk-scope to any container to opt text descendants into the system.
+   ===================================================================== */
+.gk-scope {
+  font-family: var(--gk-font-sans);
+  font-size: var(--gk-text-base);
+  line-height: var(--gk-leading-normal);
+  color: var(--gk-fg-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.gk-scope h1, .gk-h1 {
+  font-family: var(--gk-font-sans);
+  font-size: var(--gk-text-4xl);
+  font-weight: var(--gk-weight-bold);
+  line-height: var(--gk-leading-tight);
+  letter-spacing: -0.01em;
+  color: var(--gk-fg);
+  margin: 0;
+}
+.gk-scope h2, .gk-h2 {
+  font-size: var(--gk-text-3xl);
+  font-weight: var(--gk-weight-semibold);
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-fg);
+  margin: 0;
+}
+.gk-scope h3, .gk-h3 {
+  font-size: var(--gk-text-2xl);
+  font-weight: var(--gk-weight-semibold);
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-fg);
+  margin: 0;
+}
+.gk-scope h4, .gk-h4 {
+  font-size: var(--gk-text-lg);
+  font-weight: var(--gk-weight-semibold);
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-fg);
+  margin: 0;
+}
+.gk-scope p, .gk-p {
+  font-size: var(--gk-text-base);
+  line-height: var(--gk-leading-normal);
+  color: var(--gk-fg-body);
+  margin: 0;
+}
+.gk-small { font-size: var(--gk-text-sm); color: var(--gk-fg-muted); }
+.gk-xs    { font-size: var(--gk-text-xs); color: var(--gk-fg-muted); }
+.gk-code  {
+  font-family: var(--gk-font-mono);
+  font-size: 0.92em;
+  background: var(--gk-gray-100);
+  padding: 2px 6px;
+  border-radius: var(--gk-radius-sm);
+  color: var(--gk-gray-800);
+}
+.gk-serif { font-family: var(--gk-font-serif); }
