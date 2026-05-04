@@ -54,3 +54,8 @@ node_modules/
 
 # ===== Git/本地 =====
 .pids
+
+# autogen-gk 垃圾文件
+autogen-gk/.DS_Store
+autogen-gk/.cache/
+autogen-gk/**/__pycache__/
