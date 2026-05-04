@@ -1,0 +1,56 @@
+# ===== 环境变量与密钥 =====
+.env
+.env.local
+.env.production
+.env.*.local
+**/.env
+**/.env.local
+
+# ===== 数据 / 缓存 / 向量库 =====
+chroma_data/
+.cache/
+data/
+logs/
+zips/
+zips_temp/
+公考资料知识库/
+答题卡可打印/
+
+# ===== 数据库与日志 =====
+*.rdb
+dump.rdb
+*.log
+*.sqlite
+*.sqlite3
+*.db
+
+# ===== 大文件类型 =====
+*.zip
+*.pdf
+*.tar.gz
+*.bin
+
+# ===== 备份文件 =====
+*.bak
+*.bak.py
+*~
+
+# ===== Python =====
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+
+# ===== Node =====
+node_modules/
+
+# ===== IDE / OS =====
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# ===== Git/本地 =====
+.pids

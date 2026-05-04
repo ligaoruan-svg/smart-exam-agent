@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #1a1a2e;
+    background: #fff;
+  }
+
+  /* ===== 封面 ===== */
+  .cover {
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 60px 40px;
+    border-bottom: 3px solid #c0392b;
+    text-align: center;
+  }
+
+  .cover-badge {
+    background: #c0392b;
+    color: #fff;
+    font-size: 12px;
+    padding: 4px 16px;
+    border-radius: 20px;
+    letter-spacing: 0.1em;
+    margin-bottom: 32px;
+  }
+
+  .cover-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  .cover-sub {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 48px;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 48px;
+    justify-content: center;
+    margin-bottom: 48px;
+  }
+
+  .cover-meta-item {
+    text-align: center;
+  }
+
+  .cover-meta-num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: #c0392b;
+    line-height: 1;
+  }
+
+  .cover-meta-label {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+  }
+
+  .cover-notice {
+    background: #fdf8e1;
+    border: 1px solid #f0c040;
+    border-radius: 8px;
+    padding: 16px 24px;
+    font-size: 13px;
+    color: #7a6000;
+    text-align: left;
+    max-width: 480px;
+    line-height: 2;
+  }
+
+  .cover-footer {
+    margin-top: 48px;
+    font-size: 12px;
+    color: #bbb;
+  }
+
+  /* ===== 题目部分 ===== */
+  .section-header {
+    border-left: 4px solid #c0392b;
+    padding: 8px 16px;
+    margin: 32px 0 24px;
+    background: #fdf0ef;
+  }
+
+  .section-header h2 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #c0392b;
+  }
+
+  .question {
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px dashed #e8e8e8;
+  }
+
+  .question:last-of-type {
+    border-bottom: none;
+  }
+
+  .question-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .question-num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a2e;
+    white-space: nowrap;
+  }
+
+  .question-type-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #f0f0f8;
+    color: #4a4a6a;
+    white-space: nowrap;
+  }
+
+  .question-source {
+    font-size: 11px;
+    color: #aaa;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  .question-stem {
+    font-size: 14px;
+    line-height: 1.9;
+    color: #1a1a2e;
+    margin-bottom: 12px;
+    text-indent: 0;
+  }
+
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 24px;
+    padding-left: 4px;
+  }
+
+  .option {
+    font-size: 13.5px;
+    color: #333;
+    line-height: 1.7;
+  }
+
+  .option-key {
+    font-weight: 500;
+    color: #c0392b;
+    margin-right: 4px;
+  }
+
+  /* ===== 答案页 ===== */
+  .answer-page {
+    page-break-before: always;
+    padding-top: 16px;
+  }
+
+  .answer-header {
+    text-align: center;
+    padding: 24px 0 20px;
+    border-bottom: 2px solid #c0392b;
+    margin-bottom: 24px;
+  }
+
+  .answer-header h2 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+
+  .answer-header p {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+  }
+
+  /* 答案速查表 */
+  .answer-quick {
+    background: #fdf0ef;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 32px;
+  }
+
+  .answer-quick h3 {
+    font-size: 13px;
+    font-weight: 500;
+    color: #c0392b;
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  .answer-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 8px;
+  }
+
+  .answer-cell {
+    text-align: center;
+  }
+
+  .answer-cell-num {
+    font-size: 11px;
+    color: #888;
+    line-height: 1;
+  }
+
+  .answer-cell-ans {
+    font-size: 15px;
+    font-weight: 700;
+    color: #c0392b;
+    font-family: 'Noto Serif SC', serif;
+  }
+
+  /* 详细解析 */
+  .analysis-list {
+    margin-top: 8px;
+  }
+
+  .analysis-item {
+    margin-bottom: 20px;
+    padding: 16px;
+    border-radius: 6px;
+    background: #fafaf8;
+    border-left: 3px solid #c0392b;
+  }
+
+  .analysis-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1a1a2e;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .analysis-answer-badge {
+    background: #c0392b;
+    color: #fff;
+    font-size: 11px;
+    padding: 1px 8px;
+    border-radius: 4px;
+  }
+
+  .analysis-text {
+    font-size: 13px;
+    color: #444;
+    line-height: 1.8;
+  }
+
+  /* ===== 页面设置 ===== */
+  @page {
+    size: A4;
+    margin: 2cm 2.2cm;
+  }
+
+  @page :first {
+    margin: 0;
+  }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+
+  .page-content {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 32px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- 封面 -->
+<div class="cover">
+  <div class="cover-badge">公考小智 · 智能出题系统</div>
+  <div class="cover-title">{{ title }}</div>
+  <div class="cover-sub">公务员考试模拟练习卷</div>
+
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="cover-meta-num">{{ questions|length }}</div>
+      <div class="cover-meta-label">题目数量</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-num">{{ provinces|length }}</div>
+      <div class="cover-meta-label">涵盖省份</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-num">{{ time_limit }}</div>
+      <div class="cover-meta-label">建议用时（分钟）</div>
+    </div>
+  </div>
+
+  <div class="cover-notice">
+    📌 注意事项<br>
+    1. 本卷共 {{ questions|length }} 题，每题均为单项选择题<br>
+    2. 请先完成全部题目，答案与解析见最后一页<br>
+    3. 建议用时 {{ time_limit }} 分钟，模拟真实考试节奏<br>
+    4. 题目来源：公考小智知识库（32省+国考真题）
+  </div>
+
+  <div class="cover-footer">由 公考小智 · DeepSeek AI 生成 · 仅供学习参考</div>
+</div>
+
+<!-- 题目部分 -->
+<div class="page-content">
+  <div class="section-header">
+    <h2>试题部分（共 {{ questions|length }} 题，答案见最后页）</h2>
+  </div>
+
+  {% for q in questions %}
+  <div class="question">
+    <div class="question-header">
+      <span class="question-num">第 {{ q.id }} 题</span>
+      <span class="question-type-badge">{{ q.type }}</span>
+      <span class="question-source">{{ q.source }}</span>
+    </div>
+    <div class="question-stem">{{ q.stem }}</div>
+    <div class="options">
+      <div class="option"><span class="option-key">A.</span>{{ q.options.A }}</div>
+      <div class="option"><span class="option-key">B.</span>{{ q.options.B }}</div>
+      <div class="option"><span class="option-key">C.</span>{{ q.options.C }}</div>
+      <div class="option"><span class="option-key">D.</span>{{ q.options.D }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- 答案与解析（独立页） -->
+<div class="answer-page">
+  <div class="page-content">
+    <div class="answer-header">
+      <h2>参考答案与解析</h2>
+      <p>请完成全部题目后再查看本页</p>
+    </div>
+
+    <!-- 答案速查 -->
+    <div class="answer-quick">
+      <h3>▎ 答案速查</h3>
+      <div class="answer-grid">
+        {% for q in questions %}
+        <div class="answer-cell">
+          <div class="answer-cell-num">{{ q.id }}</div>
+          <div class="answer-cell-ans">{{ q.answer }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 详细解析 -->
+    <div class="section-header">
+      <h2>详细解析</h2>
+    </div>
+    <div class="analysis-list">
+      {% for q in questions %}
+      <div class="analysis-item">
+        <div class="analysis-title">
+          第 {{ q.id }} 题 · {{ q.type }}
+          <span class="analysis-answer-badge">答案：{{ q.answer }}</span>
+        </div>
+        <div class="analysis-text">{{ q.analysis }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
