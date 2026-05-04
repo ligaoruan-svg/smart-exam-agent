@@ -2,19 +2,15 @@
 .env
 .env.local
 .env.production
-.env.*.local
 **/.env
-**/.env.local
 
-# ===== 数据 / 缓存 / 向量库 =====
-chroma_data/
+# ===== 缓存与系统文件 =====
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
 .cache/
-data/
-logs/
-zips/
-zips_temp/
-公考资料知识库/
-答题卡可打印/
+.pids
 
 # ===== 数据库与日志 =====
 *.rdb
@@ -23,6 +19,14 @@ dump.rdb
 *.sqlite
 *.sqlite3
 *.db
+
+# ===== 大文件目录 =====
+公考资料知识库/
+zips/
+zips_temp/
+chroma_data/
+data/
+logs/
 
 # ===== 大文件类型 =====
 *.zip
@@ -36,9 +40,6 @@ dump.rdb
 *~
 
 # ===== Python =====
-__pycache__/
-*.pyc
-*.pyo
 .venv/
 venv/
 .pytest_cache/
@@ -46,16 +47,7 @@ venv/
 # ===== Node =====
 node_modules/
 
-# ===== IDE / OS =====
-.DS_Store
+# ===== IDE =====
 .idea/
 .vscode/
 *.swp
-
-# ===== Git/本地 =====
-.pids
-
-# autogen-gk 垃圾文件
-autogen-gk/.DS_Store
-autogen-gk/.cache/
-autogen-gk/**/__pycache__/
